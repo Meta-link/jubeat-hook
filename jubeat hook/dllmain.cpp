@@ -2,21 +2,36 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include "jubeathook.h"
+
+#include <openssl/ssl.h>
+#include <cpr/cpr.h>
+#include <nlohmann/json.hpp>
+
+using namespace std;
+using json = nlohmann::json;
+using namespace std::chrono;
 
 std::uintptr_t jubeatAdress = 0;
 ChartData* chart = nullptr;
 HardModeData* hardMode = nullptr;
 ScoreData* score = nullptr;
 ResultData* result = nullptr;
+AdditionalData additionalData;
 
+string URLbase = "";
+string URLstatus = "";
+string URLimport = "";
+
+string APIKEY = "";
 
 void chartDump()
 {
     printf("Song ID =           %i\n", chart->ChartId);
     printf("Song difficulty =   %s\n", Difficulty[chart->ChartDifficulty]);
     printf("Song level =        %i.%i\n", chart->ChartLevel, chart->ChartDecimal);
-    printf("Hard mode =         %s\n\n", hardMode->HardMode == 1 ? "yes" : "no");
+    printf("Hard mode =         %s\n\n", hardMode->HardMode ? "yes" : "no");
 }
 
 void ScoreDump(int trackNumber = 0)
@@ -36,40 +51,93 @@ void ScoreDump(int trackNumber = 0)
     printf("Result bonus =      %i\n", result->Bonus);
     printf("Result clear =      %i\n\n", result->Clear);
 
-    int scoreTotal = result->Score + result->Bonus;
-    printf("TOTAL SCORE =       %i\n", scoreTotal);
+    additionalData.ScoreTotal = result->Score + result->Bonus;
+    printf("TOTAL SCORE =       %i\n", additionalData.ScoreTotal);
 
-    int rating = 0;
-    if (scoreTotal <= 499999)
-        rating = 8;
-    else if (scoreTotal <= 699999)
-        rating = 7;
-    else if (scoreTotal <= 799999)
-        rating = 6;
-    else if (scoreTotal <= 849999)
-        rating = 5;
-    else if (scoreTotal <= 899999)
-        rating = 4;
-    else if (scoreTotal <= 949999)
-        rating = 3;
-    else if (scoreTotal <= 979999)
-        rating = 2;
-    else if (scoreTotal <= 999999)
-            rating = 1;
-    printf("RATING =            %s\n", Rating[rating]);
+    additionalData.Rating = 0;
+    if (additionalData.ScoreTotal <= 499999)
+        additionalData.Rating = 8;
+    else if (additionalData.ScoreTotal <= 699999)
+        additionalData.Rating = 7;
+    else if (additionalData.ScoreTotal <= 799999)
+        additionalData.Rating = 6;
+    else if (additionalData.ScoreTotal <= 849999)
+        additionalData.Rating = 5;
+    else if (additionalData.ScoreTotal <= 899999)
+        additionalData.Rating = 4;
+    else if (additionalData.ScoreTotal <= 949999)
+        additionalData.Rating = 3;
+    else if (additionalData.ScoreTotal <= 979999)
+        additionalData.Rating = 2;
+    else if (additionalData.ScoreTotal <= 999999)
+        additionalData.Rating = 1;
+    printf("RATING =            %s\n", Rating[additionalData.Rating]);
 
-    int clear = 0;
-    if (scoreTotal >= 700000)
+    additionalData.ClearType = 0;
+    if (additionalData.ScoreTotal >= 700000)
     {
-        if (score->MaxCombo == score->NoteCount)
-            clear = 2;
+        if (additionalData.ScoreTotal == 1000000)
+            additionalData.ClearType = 3;
+        else if (score->MaxCombo == score->NoteCount)
+            additionalData.ClearType = 2;
         else
-            clear = 1;
+            additionalData.ClearType = 1;
     }
-    printf("CLEAR =             %s\n", ClearType[clear]);
+    printf("CLEAR =             %s\n", ClearType[additionalData.ClearType]);
 
-    float musicRate = ((score->PerfectCount + 0.2 * score->GreatCount + 0.05 * score->GoodCount) / score->NoteCount) * (hardMode->HardMode ? 120 : 100);
-    printf("MUSIC RATE =        %f\n\n", musicRate);
+    additionalData.MusicRate = ((score->PerfectCount + 0.2 * score->GreatCount + 0.05 * score->GoodCount) / score->NoteCount) * (hardMode->HardMode ? 120 : 100);
+    printf("MUSIC RATE =        %f\n\n", additionalData.MusicRate);
+}
+
+void SendScore()
+{
+    json outData = {
+        {
+            "meta",
+            {
+                {"service", "jubeat hook"},
+                {"game", "jubeat"},
+                {"playtype", "Single"}
+            }
+        },
+        {
+            "scores",
+            {
+                {
+                    {"score", additionalData.ScoreTotal},
+                    {"lamp", ClearType[additionalData.ClearType]},
+                    {"percent", additionalData.MusicRate},
+                    {"matchType", "inGameID"},
+                    {"identifier", to_string(chart->ChartId)},
+                    {"difficulty", string(hardMode->HardMode ? "HARD " : "") + string(DifficultyTag[chart->ChartDifficulty])},
+                    {"timeAchieved", duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()},
+                    {"judgements",
+                        {
+                            {"miss", score->MissCount},
+                            {"poor", score->PoorCount},
+                            {"good", score->GoodCount},
+                            {"great", score->GreatCount},
+                            {"perfect", score->PerfectCount},
+                        }
+                    },
+                }
+            }   
+        }
+    };
+    cout << "[jubeat hook] Sending score to kamaitachi" << endl;
+    cout << outData.dump(4) << endl;
+    cpr::Response r = cpr::Post(cpr::Url{ URLimport},
+                                cpr::Timeout(4000),
+                                cpr::Header{ {"Authorization", "Bearer " + APIKEY}, {"Content-Type", "application/json"} },
+                                cpr::Body{ outData.dump()});
+    cout << "[jubeat hook] Score sent, response code : " << r.status_code << endl;
+    cout << "[jubeat hook] Response text : " << r.text << endl;
+}
+
+void WriteScore()
+{
+    cout << "[jubeat hook] Writing score in file" << endl;
+
 }
 
 DWORD WINAPI InitHook(LPVOID dllInstance)
@@ -83,6 +151,10 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     score = (ScoreData*)(jubeatAdress + ScoreAdress);
     result = (ResultData*)(jubeatAdress + ResultAdress);
 
+    cpr::Response rk = cpr::Get(cpr::Url{ URLbase + URLstatus });
+    cout << "[jubeat hook] Checking connection to Kamaitachi : " << rk.url << endl;
+    cout << "[jubeat hook] Kamaitachi status : " << rk.status_code << endl;
+
     bool dumped = false;
 
     do {
@@ -90,6 +162,7 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
         {
             chartDump();
             ScoreDump();
+            SendScore();
             dumped = true;
         }
         else if (GetAsyncKeyState(VK_F10))

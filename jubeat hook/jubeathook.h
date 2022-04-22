@@ -37,12 +37,26 @@ struct ResultData {
 	int32_t Clear; //122C110
 };
 
+struct AdditionalData {
+	int ScoreTotal;
+	int Rating;
+	int ClearType;
+	float MusicRate;
+};
+
 
 const char* Difficulty[]
 {
 	"Basic",
 	"Advanced",
 	"Extreme"
+};
+
+const char* DifficultyTag[]
+{
+	"BSC",
+	"ADV",
+	"EXT"
 };
 
 const char* Rating[]
@@ -60,7 +74,8 @@ const char* Rating[]
 
 const char* ClearType[]
 {
-	"Failed",
-	"Cleared",
-	"Full Combo"
+	"FAILED",
+	"CLEAR",
+	"FULL COMBO",
+	"EXCELLENT"
 };

@@ -1,4 +1,4 @@
-# jubeat-hook
+# jubeat hook
 A small hook to gather scores from the arcade rhythm game jubeat, and send them on the internet !
 
 # How to use

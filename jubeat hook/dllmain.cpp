@@ -47,7 +47,7 @@ void printDebug(auto str)
 
 void ChartDump()
 {
-    printf("    === SONG %i ===\n", currentSong);
+    printf("     === TUNE %i ===\n", currentSong-1);
     printf("Song ID =           %i\n", chart->ChartId);
     printf("Song difficulty =   %s\n", Difficulty[chart->ChartDifficulty]);
     printf("Song level =        %i.%i\n", chart->ChartLevel, chart->ChartDecimal);
@@ -259,13 +259,16 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
 
 
     do {
+        if (currentSong != 0 && results->ResultsData[0].Clear == 0) //New credit
+        {
+            printDebug("NEW CREDIT");
+            currentSong = 0;
+        }
         if(results->ResultsData[currentSong].Clear != 0)
         {
             ProcessScore();
 
             currentSong++;
-            if (currentSong > 2)
-                currentSong = 0;
         }
         else if (GetAsyncKeyState(VK_F10))
             break;

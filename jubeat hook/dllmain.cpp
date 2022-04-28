@@ -6,6 +6,7 @@
 #include <iostream>
 #include <format>
 #include <chrono>
+#include <string>
 #include "jubeathook.h"
 
 #include <openssl/ssl.h>
@@ -23,6 +24,7 @@ ChartData* chart = nullptr;
 HardModeData* hardMode = nullptr;
 Scores* scores = nullptr;
 Results* results = nullptr;
+CardData* card = nullptr;
 
 AdditionalData additionalData;
 int currentSong = 0;
@@ -32,7 +34,7 @@ json FileContentData;
 json KamaiResponse;
 
 bool showDebug;
-int playerID;
+string playerID;
 bool exportFile;
 bool exportKamai;
 string statusURL = "";
@@ -224,7 +226,7 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
         return EXIT_FAILURE;
     }
     showDebug = ini.GetBoolValue("general", "showDebug");
-    //playerID = ini.GetValue("")
+    playerID = ini.GetValue("general", "playerID");
     exportFile = ini.GetBoolValue("general", "exportFile");
     exportKamai = ini.GetBoolValue("kamaitachi", "exportKamai");
     statusURL = ini.GetValue("kamaitachi", "statusURL");
@@ -256,7 +258,7 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     hardMode = (HardModeData*)(jubeatAdress + HardModeAdress);
     scores = (Scores*)(jubeatAdress + ScoreAdress);
     results = (Results*)(jubeatAdress + ResultAdress);
-
+    card = (CardData*)(jubeatAdress + CardAdress);
 
     do {
         if (currentSong != 0 && results->ResultsData[0].Clear == 0) //New credit
@@ -264,14 +266,21 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
             printDebug("NEW CREDIT");
             currentSong = 0;
         }
-        if(results->ResultsData[currentSong].Clear != 0)
+        if (results->ResultsData[currentSong].Clear != 0)
         {
-            ProcessScore();
+            if (playerID.empty() || (strcmp(card->CardID, playerID.c_str()) == 0 || strcmp(card->CardTag, playerID.c_str()) == 0))
+            {
+                ProcessScore();
+            }
+            else printDebug("Score filtered and ignored");
 
             currentSong++;
         }
-        else if (GetAsyncKeyState(VK_F10))
-            break;
+        
+        if (GetAsyncKeyState(VK_F10))
+        {
+            //break
+        }
 
     } while (true);
 

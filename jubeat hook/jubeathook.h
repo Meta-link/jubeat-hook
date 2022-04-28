@@ -5,6 +5,7 @@ constexpr std::uintptr_t ChartAdress = 0x1074F860;
 constexpr std::uintptr_t HardModeAdress = 0xF50A6C;
 constexpr std::uintptr_t ScoreAdress = 0x11C5E60;
 constexpr std::uintptr_t ResultAdress = 0x122C104;
+constexpr std::uintptr_t CardAdress = 0xF579C0;
 
 const int32_t ScoreSize = 0xA0;
 const int32_t ResultSize = 0x2A0;
@@ -55,6 +56,14 @@ struct AdditionalData {
 	int Rating;
 	int ClearType;
 	float MusicRate;
+};
+
+struct CardData {
+	char CardTag[17];
+	uint8_t padding0[24];
+	char CardID[17];
+	uint8_t padding1[58];
+	char CardHolder[9];
 };
 
 

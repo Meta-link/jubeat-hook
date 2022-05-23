@@ -221,7 +221,7 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 
     CSimpleIniA ini;
-    SI_Error rc = ini.LoadFile("jubeathook.ini");
+    SI_Error rc = ini.LoadFile("jubeat-hook.ini");
     if (rc < 0)
     {
         cout << "Error while loading jubeathook.ini, ending process ..." << endl;

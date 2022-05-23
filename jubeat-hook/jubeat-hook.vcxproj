@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{7c54c6cf-6fa1-4469-ba65-ddf7d27d6188}</ProjectGuid>
+    <ProjectGuid>{7d18abab-794d-4984-ab0d-11ea1f1b91ec}</ProjectGuid>
     <RootNamespace>jubeathook</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -90,6 +90,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,7 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="jubeathook.h" />
+    <ClInclude Include="jubeat-hook.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

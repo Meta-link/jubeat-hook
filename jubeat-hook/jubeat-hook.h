@@ -1,11 +1,21 @@
 #pragma once
 #include <cstdint>
 
-constexpr std::uintptr_t ChartAdress = 0x1074F860;
-constexpr std::uintptr_t HardModeAdress = 0xF50A6C;
-constexpr std::uintptr_t ScoreAdress = 0x11C5E60;
-constexpr std::uintptr_t ResultAdress = 0x122C104;
-constexpr std::uintptr_t CardAdress = 0xF579C0;
+struct Adresses {
+	char Datecode[11];
+	uintptr_t ChartAdress;
+	uintptr_t HardModeAdress;
+	uintptr_t ScoreAdress;
+	uintptr_t ResultAdress;
+	uintptr_t CardAdress;
+};
+
+struct Adresses GameAdresses[] = {
+	//Clan
+	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xF579C0},
+	//Festo
+	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0},
+};
 
 const int32_t ScoreSize = 0xA0;
 const int32_t ResultSize = 0x2A0;
@@ -25,7 +35,7 @@ struct ScoreData {
 	int32_t Score; //11C5E60
 	int32_t LastCombo; //11C5E64 might be last combo before end
 	int32_t MaxCombo; //11C5E68
-	int32_t Bonus; // 11C5E60
+	int32_t Bonus; // 11C5E6C
 	int32_t NoteCount; //11C5E70
 	int32_t MissCount; //11C5E74
 	int32_t PoorCount; //11C5E78
@@ -59,11 +69,11 @@ struct AdditionalData {
 };
 
 struct CardData {
-	char CardTag[17];
+	char CardTag[17]; //F579C0
 	uint8_t padding0[24];
-	char CardID[17];
+	char CardID[17]; //F579E9
 	uint8_t padding1[58];
-	char CardHolder[9];
+	char CardHolder[9]; //F57A34
 };
 
 

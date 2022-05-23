@@ -1,4 +1,3 @@
-#pragma pack(1)
 #include "pch.h"
 #include <cstdio>
 #include <cstdint>
@@ -7,16 +6,18 @@
 #include <format>
 #include <chrono>
 #include <string>
-#include "jubeathook.h"
+#include "jubeat-hook.h"
 
 #include <openssl/ssl.h>
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <simpleini.h>
+#include <tinyxml2.h>
 
 using namespace std;
 using json = nlohmann::json;
 using namespace std::chrono;
+using namespace tinyxml2;
 
 std::uintptr_t jubeatAdress = 0;
 
@@ -33,6 +34,7 @@ json ScoreData;
 json FileContentData;
 json KamaiResponse;
 
+int currentGameVersion = -1;
 bool showDebug;
 string playerID;
 bool exportFile;
@@ -43,13 +45,13 @@ string apiKey = "";
 
 void printDebug(auto str)
 {
-    if(showDebug)
+    if (showDebug)
         cout << "[jubeat hook] " << str << endl;
 }
 
 void ChartDump()
 {
-    printf("     === TUNE %i ===\n", currentSong-1);
+    printf("     === TUNE %i ===\n", currentSong - 1);
     printf("Song ID =           %i\n", chart->ChartId);
     printf("Song difficulty =   %s\n", Difficulty[chart->ChartDifficulty]);
     printf("Song level =        %i.%i\n", chart->ChartLevel, chart->ChartDecimal);
@@ -106,7 +108,7 @@ void SetupJson()
 
 void AddScoreJson()
 {
-    ScoreData["scores"] = 
+    ScoreData["scores"] =
     {
 
         {
@@ -184,7 +186,7 @@ void ProcessScore()
         printDebug("Writing scores into file");
         scoreFile << ScoreData.dump(4) << endl;
     }
-    
+
     if (exportKamai)
     {
         printDebug("Sending score to kamaitachi");
@@ -202,7 +204,7 @@ void ProcessScore()
 
             KamaiResponse = json::parse(r.text);
             printDebug(KamaiResponse["description"]);
-            
+
             if (!KamaiResponse["body"]["import"]["errors"].empty())
             {
                 printDebug("Error :");
@@ -210,7 +212,7 @@ void ProcessScore()
             }
         }
     }
-    
+
 }
 
 DWORD WINAPI InitHook(LPVOID dllInstance)
@@ -220,9 +222,9 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
 
     CSimpleIniA ini;
     SI_Error rc = ini.LoadFile("jubeathook.ini");
-    if (rc < 0) 
+    if (rc < 0)
     {
-        cout << "Error while loading jubeathook.ini, ending process ..." <<endl;
+        cout << "Error while loading jubeathook.ini, ending process ..." << endl;
         return EXIT_FAILURE;
     }
     showDebug = ini.GetBoolValue("general", "showDebug");
@@ -235,56 +237,72 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
 
     printDebug("Starting hook");
 
-    SetupJson();
+    XMLDocument doc;
+    doc.LoadFile("prop/ea3-config.xml");
+    const char* dateCode = doc.FirstChildElement("ea3")->FirstChildElement("soft")->FirstChildElement("ext")->GetText();
+    printDebug("Datecode : " + (string)dateCode);
+
+    for (int i = 0; i < sizeof(GameAdresses) / sizeof(GameAdresses[0]); i++)
+    {
+        if (strcmp(dateCode, GameAdresses[i].Datecode) == 0)
+        {
+            currentGameVersion = i;
+            printDebug("Supported version");
+            break;
+        }
+    }
+
+    if (currentGameVersion == -1)
+    {
+        printDebug("Unsupported version, exiting now");
+    }
+    else
+    {
+        SetupJson();
+
+        if (exportFile)
+        {
+            const auto now = chrono::system_clock::now();
+            string fileName = "scores_" + format("{:%d-%m-%Y_%H%M%OS}", now) + ".json";
+            scoreFile.open(fileName);
+            printDebug("Creating score file : " + fileName);
+        }
+
+        if (exportKamai)
+        {
+            cpr::Response rk = cpr::Get(cpr::Url{ statusURL });
+            printDebug("Checking connection to Kamaitachi : " + (string)rk.url);
+            printDebug("Kamaitachi status :");
+            printDebug(rk.status_code);
+        }
+
+        jubeatAdress = (std::uintptr_t)GetModuleHandleA("jubeat.dll");
+        chart = (ChartData*)(jubeatAdress + GameAdresses[currentGameVersion].ChartAdress);
+        hardMode = (HardModeData*)(jubeatAdress + GameAdresses[currentGameVersion].HardModeAdress);
+        scores = (Scores*)(jubeatAdress + GameAdresses[currentGameVersion].ScoreAdress);
+        results = (Results*)(jubeatAdress + GameAdresses[currentGameVersion].ResultAdress);
+        card = (CardData*)(jubeatAdress + GameAdresses[currentGameVersion].CardAdress);
+
+        do {
+            if (currentSong != 0 && results->ResultsData[0].Clear == 0) //New credit
+            {
+                printDebug("NEW CREDIT");
+                currentSong = 0;
+            }
+            if (results->ResultsData[currentSong].Clear != 0)
+            {
+                if (playerID.empty() || (strcmp(card->CardID, playerID.c_str()) == 0 || strcmp(card->CardTag, playerID.c_str()) == 0))
+                {
+                    ProcessScore();
+                }
+                else printDebug("Score filtered and ignored");
+
+                currentSong++;
+            }
+        } while (true);
+    }
 
     if (exportFile)
-    {
-        const auto now = chrono::system_clock::now();
-        string fileName = "scores_" + format("{:%d-%m-%Y_%H%M%OS}", now) + ".json";
-        scoreFile.open(fileName);
-        printDebug("Creating score file : " + fileName);
-    }
-
-    if (exportKamai)
-    {
-        cpr::Response rk = cpr::Get(cpr::Url{ statusURL });
-        printDebug("Checking connection to Kamaitachi : " + (string)rk.url);
-        printDebug("Kamaitachi status :");
-        printDebug(rk.status_code);
-    }
-
-    jubeatAdress = (std::uintptr_t)GetModuleHandleA("jubeat.dll");
-    chart = (ChartData*)(jubeatAdress + ChartAdress);
-    hardMode = (HardModeData*)(jubeatAdress + HardModeAdress);
-    scores = (Scores*)(jubeatAdress + ScoreAdress);
-    results = (Results*)(jubeatAdress + ResultAdress);
-    card = (CardData*)(jubeatAdress + CardAdress);
-
-    do {
-        if (currentSong != 0 && results->ResultsData[0].Clear == 0) //New credit
-        {
-            printDebug("NEW CREDIT");
-            currentSong = 0;
-        }
-        if (results->ResultsData[currentSong].Clear != 0)
-        {
-            if (playerID.empty() || (strcmp(card->CardID, playerID.c_str()) == 0 || strcmp(card->CardTag, playerID.c_str()) == 0))
-            {
-                ProcessScore();
-            }
-            else printDebug("Score filtered and ignored");
-
-            currentSong++;
-        }
-        
-        if (GetAsyncKeyState(VK_F10))
-        {
-            //break
-        }
-
-    } while (true);
-
-    if(exportFile)
         scoreFile.close();
     printDebug("Detaching hook");
 
@@ -294,10 +312,10 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     return EXIT_SUCCESS;
 }
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+BOOL APIENTRY DllMain(HMODULE hModule,
+    DWORD  ul_reason_for_call,
+    LPVOID lpReserved
+)
 {
     switch (ul_reason_for_call)
     {

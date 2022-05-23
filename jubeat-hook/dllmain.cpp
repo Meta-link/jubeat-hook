@@ -46,7 +46,7 @@ string apiKey = "";
 void printDebug(auto str)
 {
     if (showDebug)
-        cout << "[jubeat hook] " << str << endl;
+        cout << "[jubeat-hook] " << str << endl;
 }
 
 void ChartDump()
@@ -87,7 +87,7 @@ void SetupJson()
         {
             "meta",
             {
-                {"service", "jubeat hook"},
+                {"service", "jubeat-hook"},
                 {"game", "jubeat"},
                 {"playtype", "Single"}
             }
@@ -224,7 +224,7 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     SI_Error rc = ini.LoadFile("jubeat-hook.ini");
     if (rc < 0)
     {
-        cout << "Error while loading jubeathook.ini, ending process ..." << endl;
+        cout << "Error while loading jubeat-hook.ini, ending process ..." << endl;
         return EXIT_FAILURE;
     }
     showDebug = ini.GetBoolValue("general", "showDebug");

@@ -1,6 +1,19 @@
 #pragma once
 #include <cstdint>
 
+enum Version
+{
+	jubeat,
+	ripples,
+	knit,
+	copious,
+	saucer,
+	prop,
+	qubell,
+	clan,
+	festo
+};
+
 struct Adresses {
 	char Datecode[11];
 	uintptr_t ChartAdress;
@@ -8,15 +21,16 @@ struct Adresses {
 	uintptr_t ScoreAdress;
 	uintptr_t ResultAdress;
 	uintptr_t CardAdress;
+	Version Version;
 };
 
 struct Adresses GameAdresses[] = {
-	//Clan
-	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730},
-	//Festo
-	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0},
 	//Qubell
-	{"2017062001", 0x9BDDC0C, 0x9BAD597, 0x9BA18B0, 0x9BC43BC, 0x9BAEF00},
+	{"2017062001", 0x9BDDC0C, 0x9BAD597, 0x9BA18B0, 0x9BC43BC, 0x9BAEF00, qubell},
+	//clan
+	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730, clan},
+	//festo
+	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0, festo},
 };
 
 const int32_t ScoreSize = 0xA0;
@@ -112,4 +126,17 @@ const char* ClearType[]
 	"CLEAR",
 	"FULL COMBO",
 	"EXCELLENT"
+};
+
+const char* VersionName[]
+{
+	"jubeat",
+	"ripples",
+	"knit",
+	"copious",
+	"saucer",
+	"prop",
+	"qubell",
+	"clan",
+	"festo"
 };

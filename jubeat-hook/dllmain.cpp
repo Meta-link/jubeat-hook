@@ -89,7 +89,8 @@ void SetupJson()
             {
                 {"service", "jubeat-hook"},
                 {"game", "jubeat"},
-                {"playtype", "Single"}
+                {"playtype", "Single"},
+                {"version", VersionName[GameAdresses[currentGameVersion].Version]}
             }
         },
         {
@@ -199,16 +200,24 @@ void ProcessScore()
         if (!r.text.empty())
         {
             printDebug("Checking kamaitachi import");
-            KamaiResponse = json::parse(r.text);
-            r = cpr::Get(cpr::Url{ KamaiResponse["body"]["url"] });
-
-            KamaiResponse = json::parse(r.text);
-            printDebug(KamaiResponse["description"]);
-
-            if (!KamaiResponse["body"]["import"]["errors"].empty())
+            try
             {
-                printDebug("Error :");
-                printDebug(KamaiResponse["body"]["import"]["errors"][0]["message"]);
+                KamaiResponse = json::parse(r.text);
+                r = cpr::Get(cpr::Url{ KamaiResponse["body"]["url"] });
+
+                KamaiResponse = json::parse(r.text);
+                printDebug(KamaiResponse["description"]);
+
+                if (!KamaiResponse["body"]["import"]["errors"].empty())
+                {
+                    printDebug("Error :");
+                    printDebug(KamaiResponse["body"]["import"]["errors"][0]["message"]);
+                }
+            }
+            catch (json::parse_error& e)
+            {
+                printDebug("Error parsing the json");
+                printDebug(e.what());
             }
         }
     }
@@ -274,6 +283,12 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
             printDebug("Checking connection to Kamaitachi : " + (string)rk.url);
             printDebug("Kamaitachi status :");
             printDebug(rk.status_code);
+
+            if (rk.status_code != 200)
+            {
+                printDebug("Kamaitachi has a problem, export disabled");
+                exportKamai = false;
+            }
         }
 
         jubeatAdress = (std::uintptr_t)GetModuleHandleA("jubeat.dll");

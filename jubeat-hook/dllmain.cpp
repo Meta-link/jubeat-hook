@@ -46,7 +46,14 @@ string apiKey = "";
 void printDebug(auto str)
 {
     if (showDebug)
+    {   //output to hooked console
         cout << "[jubeat-hook] " << str << endl;
+
+        //output to file
+        std::ofstream outfile("jubeat-hook.log", ios::out | ios::app);
+        outfile << str << endl;
+        outfile.close();
+    }
 }
 
 void ChartDump()

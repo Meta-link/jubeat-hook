@@ -299,6 +299,12 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
 
                 currentSong++;
             }
+            else if (GetAsyncKeyState(VK_F10))
+            {
+                printDebug(card->CardID);
+                printDebug(card->CardTag);
+                printDebug(card->CardHolder);
+            }
         } while (true);
     }
 

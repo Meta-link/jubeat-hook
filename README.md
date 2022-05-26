@@ -3,7 +3,7 @@ A small hook to gather scores from the arcade rhythm game jubeat by reading the 
 
 # Features
 * Export your jubeat scores to tachi leaderboards
-* Multiple game support : currently festo and clan, see [jubeat-hook.h](jubeat-hook/jubeat-hook.h). If your version is not supported, feel free to send me a message or even do a PR yourself
+* Multiple versions support : see [jubeat-hook.h](jubeat-hook/jubeat-hook.h). If your version is not supported, feel free to send me a message or even do a PR yourself
 * Filter scores for a precise player (using card tag or ID)
 * Enable debug mode to see every infos about your play
 
@@ -33,4 +33,4 @@ A small hook to gather scores from the arcade rhythm game jubeat by reading the 
 
 # Thanks
 
-All of this was possible thanks to the incredible work of aixxe and their wonderful articles about hacking IIDX scores (starting [here](https://aixxe.net/2019/06/iidx-score-data)). I also took a lot of inspirations from  [ChunItachi](https://github.com/tomatosoupcan/ChunItachi). And of course, thanks to all the people and friends from various discord who helped me during the creating of this tool (CrazyRedMachine, zkldi, Amy ...) !
+All of this was possible thanks to the incredible work of aixxe and their wonderful articles about hacking IIDX scores (starting [here](https://aixxe.net/2019/06/iidx-score-data)). I also took a lot of inspirations from  [ChunItachi](https://github.com/tomatosoupcan/ChunItachi). And of course, thanks to all the people and friends from various discord who helped me during the creating of this tool (CrazyRedMachine, zkldi, Amy, mowfax ...) !

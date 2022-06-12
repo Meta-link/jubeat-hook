@@ -26,6 +26,7 @@ struct Adresses {
 
 struct Adresses GameAdresses[] = {
 	//Qubell
+	{"2017041500", 0x9BD9B44, 0x9BA9527, 0x9B9D880, 0x9BC02F4, 0x9BAAE90, qubell},
 	{"2017062001", 0x9BDDC0C, 0x9BAD597, 0x9BA18B0, 0x9BC43BC, 0x9BAEF00, qubell},
 	//clan
 	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730, clan},

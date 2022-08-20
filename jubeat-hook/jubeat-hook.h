@@ -32,6 +32,7 @@ struct Adresses GameAdresses[] = {
 	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730, clan},
 	//festo
 	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0, festo},
+	{"2022052400", 0x107752C0, 0xF93084, 0x120D190, 0x124EC64, 0xF9A6C0, festo},
 };
 
 const int32_t ScoreSize = 0xA0;

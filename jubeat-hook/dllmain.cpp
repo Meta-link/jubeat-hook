@@ -51,7 +51,7 @@ void printDebug(auto str)
 
 void ChartDump()
 {
-    printf("     === TUNE %i ===\n", currentSong - 1);
+    printf("     === TUNE %i ===\n", currentSong + 1);
     printf("Song ID =           %i\n", chart->ChartId);
     printf("Song difficulty =   %s\n", Difficulty[chart->ChartDifficulty]);
     printf("Song level =        %i.%i\n", chart->ChartLevel, chart->ChartDecimal);
@@ -203,15 +203,21 @@ void ProcessScore()
             try
             {
                 KamaiResponse = json::parse(r.text);
-                r = cpr::Get(cpr::Url{ KamaiResponse["body"]["url"] });
-
-                KamaiResponse = json::parse(r.text);
-                printDebug(KamaiResponse["description"]);
-
-                if (!KamaiResponse["body"]["import"]["errors"].empty())
+                if (KamaiResponse["success"] == true)
                 {
-                    printDebug("Error :");
-                    printDebug(KamaiResponse["body"]["import"]["errors"][0]["message"]);
+                    r = cpr::Get(cpr::Url{ KamaiResponse["body"]["url"] });
+                    KamaiResponse = json::parse(r.text);
+                    printDebug(KamaiResponse["description"]);
+
+                    if (!KamaiResponse["body"]["import"]["errors"].empty())
+                    {
+                        printDebug("Error :");
+                        printDebug(KamaiResponse["body"]["import"]["errors"][0]["message"]);
+                    }
+                }
+                else
+                {
+                    printDebug(KamaiResponse["description"]);
                 }
             }
             catch (json::parse_error& e)
@@ -248,7 +254,28 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
 
     XMLDocument doc;
     doc.LoadFile("prop/ea3-config.xml");
-    const char* dateCode = doc.FirstChildElement("ea3")->FirstChildElement("soft")->FirstChildElement("ext")->GetText();
+
+    const char* dateCode;
+    printDebug("Parsing ea3-config.xml to find datecode");
+    if (doc.FirstChildElement("ea3")->FirstChildElement("soft") != NULL)
+    {
+        dateCode = doc.FirstChildElement("ea3")->FirstChildElement("soft")->FirstChildElement("ext")->GetText();
+    }
+    else
+    {
+        printDebug("Parsing ea3-ident.xml to find datecode");
+        doc.LoadFile("prop/ea3-ident.xml");
+        if (doc.FirstChildElement("ea3_conf") != NULL)
+        {
+            dateCode = doc.FirstChildElement("ea3_conf")->FirstChildElement("soft")->FirstChildElement("ext")->GetText();
+        }
+        else
+        {
+            printDebug("No valid XML to parse, exiting now ...");
+            return EXIT_FAILURE;
+        }
+    }
+
     printDebug("Datecode : " + (string)dateCode);
 
     for (int i = 0; i < sizeof(GameAdresses) / sizeof(GameAdresses[0]); i++)

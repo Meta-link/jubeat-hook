@@ -17,6 +17,7 @@ A small hook to gather scores from the arcade rhythm game jubeat by reading the 
 
 # Planned features
 
+* Local matching support (right now it will send wrong scores for each song)
 * Export session scores into a single .json file
 * More games support
 

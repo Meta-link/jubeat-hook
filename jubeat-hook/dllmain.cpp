@@ -26,6 +26,7 @@ HardModeData* hardMode = nullptr;
 Scores* scores = nullptr;
 Results* results = nullptr;
 CardData* card = nullptr;
+DatecodeData* datecode = nullptr;
 
 AdditionalData additionalData;
 int currentSong = 0;
@@ -35,6 +36,7 @@ json FileContentData;
 json KamaiResponse;
 
 int currentGameVersion = -1;
+bool isOmni = false;
 bool showDebug;
 string playerID;
 bool exportFile;
@@ -78,7 +80,7 @@ void ScoreDump()
     printf("TOTAL SCORE =       %i\n", additionalData.ScoreTotal);
     printf("RATING =            %s\n", Rating[additionalData.Rating]);
     printf("CLEAR =             %s\n", ClearType[additionalData.ClearType]);
-    printf("MUSIC RATE =        %f\n\n", additionalData.MusicRate);
+    printf("MUSIC RATE =        %.1f\n\n", additionalData.MusicRate);
 }
 
 void SetupJson()
@@ -90,7 +92,7 @@ void SetupJson()
                 {"service", "jubeat-hook"},
                 {"game", "jubeat"},
                 {"playtype", "Single"},
-                {"version", VersionName[GameAdresses[currentGameVersion].Version]}
+                {"version", string(VersionName[GameAdresses[currentGameVersion].Version]) + (isOmni ? "-omni" : "")}
             }
         },
         {
@@ -172,6 +174,7 @@ void ProcessScore()
     }
 
     additionalData.MusicRate = ((scores->ScoresData[currentSong].PerfectCount + 0.2 * scores->ScoresData[currentSong].GreatCount + 0.05 * scores->ScoresData[currentSong].GoodCount) / scores->ScoresData[currentSong].NoteCount) * (hardMode->HardMode ? 120 : 100);
+    additionalData.MusicRate = ((int)(additionalData.MusicRate * 10)) / 10.0;
 
     if (showDebug)
     {
@@ -294,8 +297,6 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
     }
     else
     {
-        SetupJson();
-
         if (exportFile)
         {
             const auto now = chrono::system_clock::now();
@@ -324,6 +325,19 @@ DWORD WINAPI InitHook(LPVOID dllInstance)
         scores = (Scores*)(jubeatAdress + GameAdresses[currentGameVersion].ScoreAdress);
         results = (Results*)(jubeatAdress + GameAdresses[currentGameVersion].ResultAdress);
         card = (CardData*)(jubeatAdress + GameAdresses[currentGameVersion].CardAdress);
+
+        if (GameAdresses[currentGameVersion].DatecodeAdress != 0x0) //Check for omnimix
+        {
+            datecode = (DatecodeData*)(jubeatAdress + GameAdresses[currentGameVersion].DatecodeAdress);
+            while (!strcmp(datecode->Datecode, ""));
+            if (strchr(datecode->Datecode, 'X') != NULL)
+            {
+                printDebug("Omnimix detected");
+                isOmni = true;
+            }
+        }
+
+        SetupJson();
 
         do {
             if (currentSong != 0 && results->ResultsData[0].Clear == 0) //New credit

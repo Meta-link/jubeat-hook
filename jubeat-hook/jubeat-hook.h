@@ -22,17 +22,18 @@ struct Adresses {
 	uintptr_t ResultAdress;
 	uintptr_t CardAdress;
 	Version Version;
+	uintptr_t DatecodeAdress; //Only used for omnimix detection, 0x0 if there is none
 };
 
 struct Adresses GameAdresses[] = {
 	//Qubell
-	{"2017041500", 0x9BD9B44, 0x9BA9527, 0x9B9D880, 0x9BC02F4, 0x9BAAE90, qubell},
-	{"2017062001", 0x9BDDC0C, 0x9BAD597, 0x9BA18B0, 0x9BC43BC, 0x9BAEF00, qubell},
+	{"2017041500", 0x9BD9B44, 0x9BA9527, 0x9B9D880, 0x9BC02F4, 0x9BAAE90, qubell, 0x0},
+	{"2017062001", 0x9BDDC0C, 0x9BAD597, 0x9BA18B0, 0x9BC43BC, 0x9BAEF00, qubell, 0x0},
 	//clan
-	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730, clan},
+	{"2018070901", 0xBDF8B6C, 0xBDC0F5F, 0xBDB4E18, 0xBDDF5B4, 0xBDC2730, clan, 0x0},
 	//festo
-	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0, festo},
-	{"2022052400", 0x107752C0, 0xF93084, 0x120D190, 0x124EC64, 0xF9A6C0, festo},
+	{"2018112702", 0x1074F860, 0xF50A6C, 0x11C5E60, 0x122C104, 0xF579C0, festo, 0x0},
+	{"2022052400", 0x107752C0, 0xF93084, 0x120D190, 0x124EC64, 0xF9A6C0, festo, 0xE928DB},
 };
 
 const int32_t ScoreSize = 0xA0;
@@ -51,7 +52,7 @@ struct HardModeData {
 
 struct ScoreData {
 	int32_t Score; //11C5E60
-	int32_t LastCombo; //11C5E64 might be last combo before end
+	int32_t LastCombo; //11C5E64
 	int32_t MaxCombo; //11C5E68
 	int32_t Bonus; // 11C5E6C
 	int32_t NoteCount; //11C5E70
@@ -83,7 +84,7 @@ struct AdditionalData {
 	int ScoreTotal;
 	int Rating;
 	int ClearType;
-	float MusicRate;
+	double MusicRate;
 };
 
 struct CardData {
@@ -94,6 +95,9 @@ struct CardData {
 	char CardHolder[9]; //F57A34
 };
 
+struct DatecodeData {
+	char Datecode[21]; //E928DB
+};
 
 const char* Difficulty[]
 {
